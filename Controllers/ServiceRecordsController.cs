@@ -15,19 +15,35 @@ namespace CarServiceTracker.Controllers
             _context = context;
         }
 
-        // GET: ServiceRecords
-        public async Task<IActionResult> Index()
+        // INDEX (with optional filter by carId)
+        public async Task<IActionResult> Index(int? carId)
         {
-            var records = await _context.ServiceRecords
+            var query = _context.ServiceRecords
                 .Include(r => r.Car)
                 .Include(r => r.ServiceType)
+                .AsQueryable();
+
+            if (carId.HasValue)
+            {
+                query = query.Where(r => r.CarId == carId.Value);
+
+                var car = await _context.Cars
+                    .Where(c => c.Id == carId.Value)
+                    .Select(c => new { c.Brand, c.Model, c.Year })
+                    .FirstOrDefaultAsync();
+
+                ViewBag.FilterCar = car != null
+                    ? $"{car.Brand} {car.Model} ({car.Year})"
+                    : "Selected car";
+            }
+
+            var records = await query
                 .OrderByDescending(r => r.Date)
                 .ToListAsync();
 
             return View(records);
         }
 
-        // GET: ServiceRecords/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -42,24 +58,16 @@ namespace CarServiceTracker.Controllers
             return View(record);
         }
 
-        // GET: ServiceRecords/Create
         public async Task<IActionResult> Create()
         {
             await LoadDropdownsAsync();
             return View(new ServiceRecord { Date = DateTime.Today });
         }
 
-        // POST: ServiceRecords/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ServiceRecord record)
         {
-            if (record.CarId <= 0)
-                ModelState.AddModelError(nameof(record.CarId), "Please select a car.");
-
-            if (record.ServiceTypeId <= 0)
-                ModelState.AddModelError(nameof(record.ServiceTypeId), "Please select a service type.");
-
             if (!ModelState.IsValid)
             {
                 await LoadDropdownsAsync(record.CarId, record.ServiceTypeId);
@@ -68,10 +76,10 @@ namespace CarServiceTracker.Controllers
 
             _context.ServiceRecords.Add(record);
             await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: ServiceRecords/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -83,18 +91,11 @@ namespace CarServiceTracker.Controllers
             return View(record);
         }
 
-        // POST: ServiceRecords/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, ServiceRecord record)
         {
             if (id != record.Id) return NotFound();
-
-            if (record.CarId <= 0)
-                ModelState.AddModelError(nameof(record.CarId), "Please select a car.");
-
-            if (record.ServiceTypeId <= 0)
-                ModelState.AddModelError(nameof(record.ServiceTypeId), "Please select a service type.");
 
             if (!ModelState.IsValid)
             {
@@ -102,21 +103,12 @@ namespace CarServiceTracker.Controllers
                 return View(record);
             }
 
-            try
-            {
-                _context.Update(record);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ServiceRecordExists(record.Id)) return NotFound();
-                throw;
-            }
+            _context.Update(record);
+            await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: ServiceRecords/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -131,7 +123,6 @@ namespace CarServiceTracker.Controllers
             return View(record);
         }
 
-        // POST: ServiceRecords/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -146,9 +137,6 @@ namespace CarServiceTracker.Controllers
 
             return RedirectToAction(nameof(Index));
         }
-
-        private bool ServiceRecordExists(int id)
-            => _context.ServiceRecords.Any(e => e.Id == id);
 
         private async Task LoadDropdownsAsync(int? selectedCarId = null, int? selectedServiceTypeId = null)
         {
