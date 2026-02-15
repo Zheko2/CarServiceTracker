@@ -1,4 +1,5 @@
 ﻿@model CarServiceTracker.Models.ServiceRecord
+@using Microsoft.AspNetCore.Mvc.Rendering
 
 @{
     ViewData["Title"] = "Edit Service Record";
@@ -16,21 +17,41 @@
     </div>
 
     <div class="mb-3">
+        <label asp-for="CarId" class="form-label"></label>
+        <select asp-for="CarId"
+                class="form-select"
+                asp-items="@(ViewData["CarId"] as SelectList)">
+            <option value="">-- Select car --</option>
+        </select>
+        <span asp-validation-for="CarId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ServiceTypeId" class="form-label"></label>
+        <select asp-for="ServiceTypeId"
+                class="form-select"
+                asp-items="@(ViewData["ServiceTypeId"] as SelectList)">
+            <option value="">-- Select service type --</option>
+        </select>
+        <span asp-validation-for="ServiceTypeId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Mileage" class="form-label"></label>
+        <input asp-for="Mileage" class="form-control" />
+        <span asp-validation-for="Mileage" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
         <label asp-for="Price" class="form-label"></label>
         <input asp-for="Price" class="form-control" />
         <span asp-validation-for="Price" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="CarId" class="form-label">Car</label>
-        <select asp-for="CarId" class="form-select" asp-items="ViewBag.Cars"></select>
-        <span asp-validation-for="CarId" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="ServiceTypeId" class="form-label">Service Type</label>
-        <select asp-for="ServiceTypeId" class="form-select" asp-items="ViewBag.ServiceTypes"></select>
-        <span asp-validation-for="ServiceTypeId" class="text-danger"></span>
+        <label asp-for="Notes" class="form-label"></label>
+        <textarea asp-for="Notes" class="form-control"></textarea>
+        <span asp-validation-for="Notes" class="text-danger"></span>
     </div>
 
     <button type="submit" class="btn btn-primary">Save</button>

@@ -1,38 +1,57 @@
 ﻿@model CarServiceTracker.Models.ServiceRecord
+@using Microsoft.AspNetCore.Mvc.Rendering
 
 @{
     ViewData["Title"] = "Create Service Record";
 }
 
-<h1>Create</h1>
+<h1>Create Service Record</h1>
 
 <form asp-action="Create" method="post">
+
+    <div class="text-danger" asp-validation-summary="All"></div>
+
     <div class="mb-3">
         <label asp-for="Date" class="form-label"></label>
         <input asp-for="Date" class="form-control" type="date" />
-        <span asp-validation-for="Date" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="CarId" class="form-label"></label>
+        <select asp-for="CarId"
+                class="form-select"
+                asp-items="@(ViewData["CarId"] as SelectList)">
+            <option value="">-- Select car --</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ServiceTypeId" class="form-label"></label>
+        <select asp-for="ServiceTypeId"
+                class="form-select"
+                asp-items="@(ViewData["ServiceTypeId"] as SelectList)">
+            <option value="">-- Select service type --</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Mileage" class="form-label"></label>
+        <input asp-for="Mileage" class="form-control" />
     </div>
 
     <div class="mb-3">
         <label asp-for="Price" class="form-label"></label>
         <input asp-for="Price" class="form-control" />
-        <span asp-validation-for="Price" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="CarId" class="form-label">Car</label>
-        <select asp-for="CarId" class="form-select" asp-items="ViewBag.Cars"></select>
-        <span asp-validation-for="CarId" class="text-danger"></span>
+        <label asp-for="Notes" class="form-label"></label>
+        <textarea asp-for="Notes" class="form-control"></textarea>
     </div>
 
-    <div class="mb-3">
-        <label asp-for="ServiceTypeId" class="form-label">Service Type</label>
-        <select asp-for="ServiceTypeId" class="form-select" asp-items="ViewBag.ServiceTypes"></select>
-        <span asp-validation-for="ServiceTypeId" class="text-danger"></span>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Create</button>
+    <button type="submit" class="btn btn-primary">Save</button>
     <a asp-action="Index" class="btn btn-secondary">Back</a>
+
 </form>
 
 @section Scripts {

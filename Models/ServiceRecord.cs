@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
 
 namespace CarServiceTracker.Models
 {
@@ -9,28 +8,27 @@ namespace CarServiceTracker.Models
         public int Id { get; set; }
 
         [Required]
-        [Display(Name = "Service date")]
         [DataType(DataType.Date)]
-        public DateTime Date { get; set; } = DateTime.Today;
+        public DateTime Date { get; set; }
 
         [Required]
-        [Range(1, int.MaxValue, ErrorMessage = "Mileage must be at least 1.")]
+        [Range(1, int.MaxValue)]
         public int Mileage { get; set; }
 
         [Required]
-        [Range(typeof(decimal), "0", "1000000", ErrorMessage = "Price must be between 0 and 1,000,000.")]
-        [Precision(18, 2)]
+        [Range(typeof(decimal), "0", "1000000")]
         public decimal Price { get; set; }
 
-        [StringLength(500)]
         public string? Notes { get; set; }
 
-        [Display(Name = "Car")]
+        // Foreign Key
+        [Required]
         public int CarId { get; set; }
-        public Car Car { get; set; } = null!;
+        public Car? Car { get; set; }
 
-        [Display(Name = "Service type")]
+        // Foreign Key
+        [Required]
         public int ServiceTypeId { get; set; }
-        public ServiceType ServiceType { get; set; } = null!;
+        public ServiceType? ServiceType { get; set; }
     }
 }
