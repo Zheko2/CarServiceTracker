@@ -10,6 +10,7 @@ namespace CarServiceTracker.Data
         {
         }
 
+
         public DbSet<Car> Cars { get; set; } = null!;
         public DbSet<ServiceRecord> ServiceRecords { get; set; } = null!;
         public DbSet<ServiceType> ServiceTypes { get; set; } = null!;

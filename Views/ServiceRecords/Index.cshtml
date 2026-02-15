@@ -1,0 +1,39 @@
+﻿@model IEnumerable<CarServiceTracker.Models.ServiceRecord>
+
+@{
+    ViewData["Title"] = "Service Records";
+}
+
+<h1>Service Records</h1>
+
+<p>
+    <a class="btn btn-primary" asp-action="Create">Create New</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Price</th>
+            <th>Car</th>
+            <th>Service Type</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Date.ToString("yyyy-MM-dd")</td>
+                <td>@item.Price</td>
+                <td>@(item.Car != null ? $"{item.Car.Brand} {item.Car.Model}" : item.CarId.ToString())</td>
+                <td>@(item.ServiceType != null ? item.ServiceType.Name : item.ServiceTypeId.ToString())</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
