@@ -1,23 +1,50 @@
 ﻿@{
     ViewData["Title"] = "CarServiceTracker";
+    var carsCount = (int)(ViewBag.CarsCount ?? 0);
+    var recordsCount = (int)(ViewBag.ServiceRecordsCount ?? 0);
 }
 
 <div class="text-center">
-    <h1 class="display-5">CarServiceTracker</h1>
-    <p class="lead">Track your cars and service history.</p>
+    <h1 class="display-5 fw-bold" style="color:#1b263b;">
+        CarServiceTracker
+    </h1>
 
-    <div class="d-flex justify-content-center gap-2 mt-4">
-        <a class="btn btn-primary btn-lg" asp-controller="Cars" asp-action="Index">
-            Cars
-        </a>
-        <a class="btn btn-outline-primary btn-lg" asp-controller="ServiceRecords" asp-action="Index">
-            Service Records
-        </a>
+    <p class="lead">Track your cars and service history in one place.</p>
+
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="h6 text-muted">Cars</div>
+                    <div class="display-6">@carsCount</div>
+                    <a class="btn btn-primary mt-2"
+                       asp-controller="Cars"
+                       asp-action="Index">Open Cars</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="h6 text-muted">Service Records</div>
+                    <div class="display-6">@recordsCount</div>
+                    <a class="btn btn-outline-primary mt-2"
+                       asp-controller="ServiceRecords"
+                       asp-action="Index">Open Records</a>
+                </div>
+            </div>
+        </div>
     </div>
 
     <hr class="my-4" />
 
-    <p class="text-muted">
-        Tip: Click the service records count in Cars to filter records for a specific car.
-    </p>
+    <div class="text-start mx-auto" style="max-width: 720px;">
+        <h5>What you can do</h5>
+        <ul>
+            <li>Add and manage cars</li>
+            <li>Add service records (date, mileage, price, notes)</li>
+            <li>Filter service records by car (click the count in Cars)</li>
+        </ul>
+    </div>
 </div>

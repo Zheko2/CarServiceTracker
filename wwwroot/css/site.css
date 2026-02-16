@@ -1,22 +1,42 @@
-html {
-  font-size: 14px;
-}
-
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
-}
+/* ===== Custom Theme ===== */
 
 body {
-  margin-bottom: 60px;
+    background-color: #f4f6f9;
 }
+
+.navbar {
+    background-color: #0d1b2a !important;
+}
+
+    .navbar .nav-link,
+    .navbar .navbar-brand {
+        color: #ffffff !important;
+    }
+
+        .navbar .nav-link:hover {
+            color: #4cc9f0 !important;
+        }
+
+.card {
+    border-radius: 12px;
+}
+
+.card-body {
+    background: linear-gradient(135deg, #1b263b, #415a77);
+    color: white;
+}
+
+.card .btn-primary {
+    background-color: #4cc9f0;
+    border: none;
+}
+
+.card .btn-outline-primary {
+    border-color: #4cc9f0;
+    color: #4cc9f0;
+}
+
+    .card .btn-outline-primary:hover {
+        background-color: #4cc9f0;
+        color: white;
+    }
