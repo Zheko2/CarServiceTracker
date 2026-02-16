@@ -17,16 +17,20 @@
             <th>Model</th>
             <th>Year</th>
             <th>Service Records</th>
+            <th>Total Spent (€)</th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model.OrderBy(c => c.Brand).ThenBy(c => c.Model))
+        @foreach (var item in Model)
         {
+            var totalSpent = item.ServiceRecords?.Sum(sr => sr.Price) ?? 0m;
+
             <tr>
                 <td>@item.Brand</td>
                 <td>@item.Model</td>
                 <td>@item.Year</td>
+
                 <td>
                     <a asp-controller="ServiceRecords"
                        asp-action="Index"
@@ -34,6 +38,11 @@
                         @(item.ServiceRecords?.Count ?? 0)
                     </a>
                 </td>
+
+                <td class="fw-semibold text-success">
+                    €@totalSpent.ToString("F2")
+                </td>
+
                 <td>
                     <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                     <a asp-action="Details" asp-route-id="@item.Id">Details</a> |

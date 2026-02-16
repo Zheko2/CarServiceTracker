@@ -29,7 +29,10 @@
                 <td>@(item.Car != null ? $"{item.Car.Brand} {item.Car.Model}" : item.CarId.ToString())</td>
                 <td>@(item.ServiceType != null ? item.ServiceType.Name : item.ServiceTypeId.ToString())</td>
                 <td>@item.Mileage</td>
-                <td>@item.Price.ToString("F2")</td>
+                <td class="fw-semibold text-success">
+                    €@item.Price.ToString("F2")
+                </td>
+
                 <td>
                     <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                     <a asp-action="Details" asp-route-id="@item.Id">Details</a> |

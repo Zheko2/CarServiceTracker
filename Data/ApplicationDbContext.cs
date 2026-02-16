@@ -10,7 +10,6 @@ namespace CarServiceTracker.Data
         {
         }
 
-
         public DbSet<Car> Cars { get; set; } = null!;
         public DbSet<ServiceRecord> ServiceRecords { get; set; } = null!;
         public DbSet<ServiceType> ServiceTypes { get; set; } = null!;
@@ -19,6 +18,12 @@ namespace CarServiceTracker.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            // Fix: decimal precision for Price (removes EF warning)
+            modelBuilder.Entity<ServiceRecord>()
+                .Property(sr => sr.Price)
+                .HasPrecision(18, 2);
+
+            // Seed ServiceTypes
             modelBuilder.Entity<ServiceType>().HasData(
                 new ServiceType { Id = 1, Name = "Oil Change" },
                 new ServiceType { Id = 2, Name = "Oil Filter" },
