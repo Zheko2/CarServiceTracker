@@ -5,7 +5,7 @@ namespace CarServiceTracker.Data
 {
     public class ApplicationDbContext : DbContext
     {
-
+        public DbSet<Expense> Expenses { get; set; } = null!;
         public DbSet<Garage> Garages { get; set; } = null!;
 
 

@@ -4,6 +4,8 @@ namespace CarServiceTracker.Models
 {
     public class Car
     {
+
+        public ICollection<Expense> Expenses { get; set; } = new List<Expense>();
         public int? GarageId { get; set; }
 
         public Garage? Garage { get; set; }
