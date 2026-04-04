@@ -4,6 +4,10 @@ namespace CarServiceTracker.Models
 {
     public class Car
     {
+        public int? GarageId { get; set; }
+
+        public Garage? Garage { get; set; }
+
         public int Id { get; set; }
 
         [Required]
