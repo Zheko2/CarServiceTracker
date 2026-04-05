@@ -1,14 +1,11 @@
 ﻿using CarServiceTracker.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarServiceTracker.Data
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : IdentityDbContext
     {
-        public DbSet<Expense> Expenses { get; set; } = null!;
-        public DbSet<Garage> Garages { get; set; } = null!;
-
-
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
@@ -17,17 +14,21 @@ namespace CarServiceTracker.Data
         public DbSet<Car> Cars { get; set; } = null!;
         public DbSet<ServiceRecord> ServiceRecords { get; set; } = null!;
         public DbSet<ServiceType> ServiceTypes { get; set; } = null!;
+        public DbSet<Garage> Garages { get; set; } = null!;
+        public DbSet<Expense> Expenses { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Fix: decimal precision for Price (removes EF warning)
             modelBuilder.Entity<ServiceRecord>()
                 .Property(sr => sr.Price)
                 .HasPrecision(18, 2);
 
-            // Seed ServiceTypes
+            modelBuilder.Entity<Expense>()
+                .Property(e => e.Amount)
+                .HasPrecision(18, 2);
+
             modelBuilder.Entity<ServiceType>().HasData(
                 new ServiceType { Id = 1, Name = "Oil Change" },
                 new ServiceType { Id = 2, Name = "Oil Filter" },
