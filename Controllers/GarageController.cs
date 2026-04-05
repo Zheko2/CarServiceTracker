@@ -1,5 +1,6 @@
 ﻿using CarServiceTracker.Data;
 using CarServiceTracker.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -58,6 +59,7 @@ namespace CarServiceTracker.Controllers
         }
 
         // DELETE GET
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Delete(int id)
         {
             var garage = await _context.Garages.FindAsync(id);
@@ -69,6 +71,7 @@ namespace CarServiceTracker.Controllers
         }
 
         // DELETE POST
+        [Authorize(Roles = "Administrator")]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
