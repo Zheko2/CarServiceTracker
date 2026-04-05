@@ -15,19 +15,30 @@ namespace CarServiceTracker.Controllers
             _context = context;
         }
 
-        // INDEX
-        public async Task<IActionResult> Index()
+        // INDEX + SEARCH
+        public async Task<IActionResult> Index(string? searchTerm)
         {
-            var cars = await _context.Cars
+            var query = _context.Cars
                 .Include(c => c.ServiceRecords)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(c =>
+                    c.Brand.Contains(searchTerm) ||
+                    c.Model.Contains(searchTerm));
+            }
+
+            var cars = await query
                 .OrderBy(c => c.Brand)
                 .ThenBy(c => c.Model)
                 .ToListAsync();
 
+            ViewBag.SearchTerm = searchTerm;
+
             return View(cars);
         }
 
-        // DETAILS
         public async Task<IActionResult> Details(int id)
         {
             var car = await _context.Cars
@@ -40,13 +51,11 @@ namespace CarServiceTracker.Controllers
             return View(car);
         }
 
-        // CREATE GET
         public IActionResult Create()
         {
             return View();
         }
 
-        // CREATE POST
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Car car)
@@ -60,7 +69,6 @@ namespace CarServiceTracker.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // EDIT GET
         public async Task<IActionResult> Edit(int id)
         {
             var car = await _context.Cars.FindAsync(id);
@@ -70,7 +78,6 @@ namespace CarServiceTracker.Controllers
             return View(car);
         }
 
-        // EDIT POST
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Car car)
@@ -87,7 +94,6 @@ namespace CarServiceTracker.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // DELETE GET
         [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -100,7 +106,6 @@ namespace CarServiceTracker.Controllers
             return View(car);
         }
 
-        // DELETE POST
         [Authorize(Roles = "Administrator")]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]

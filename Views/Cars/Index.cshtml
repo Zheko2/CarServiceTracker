@@ -6,6 +6,20 @@
 
 <h2>Cars</h2>
 
+<form asp-action="Index" method="get" class="row g-2 mb-3">
+    <div class="col-auto">
+        <input type="text"
+               name="searchTerm"
+               value="@ViewBag.SearchTerm"
+               class="form-control"
+               placeholder="Search by brand or model..." />
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-outline-primary">Search</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Clear</a>
+    </div>
+</form>
+
 <p>
     <a asp-action="Create" class="btn btn-primary">Create New</a>
 </p>
@@ -46,7 +60,6 @@
                 <td>
                     <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                     <a asp-action="Details" asp-route-id="@item.Id">Details</a>
-
                     @if (User.IsInRole("Administrator"))
                     {
                         @: |

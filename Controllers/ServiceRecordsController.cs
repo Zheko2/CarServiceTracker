@@ -17,8 +17,10 @@ namespace CarServiceTracker.Controllers
         }
 
         // INDEX (with optional filter by carId)
-        public async Task<IActionResult> Index(int? carId)
+        public async Task<IActionResult> Index(int? carId, int page = 1)
         {
+            int pageSize = 5;
+
             var query = _context.ServiceRecords
                 .Include(r => r.Car)
                 .Include(r => r.ServiceType)
@@ -38,9 +40,17 @@ namespace CarServiceTracker.Controllers
                     : "Selected car";
             }
 
+            int totalRecords = await query.CountAsync();
+
             var records = await query
                 .OrderByDescending(r => r.Date)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
+
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+            ViewBag.CurrentCarId = carId;
 
             return View(records);
         }
