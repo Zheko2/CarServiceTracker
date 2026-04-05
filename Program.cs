@@ -37,9 +37,10 @@ var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
+    app.UseExceptionHandler("/Error/Error500");
 }
+
+app.UseStatusCodePagesWithReExecute("/Error/NotFound404");
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
