@@ -1,6 +1,10 @@
 using CarServiceTracker.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using CarServiceTracker.Services;
+using CarServiceTracker.Services.Contracts;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +30,7 @@ builder.Services
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+builder.Services.AddScoped<IGarageService, GarageService>();
 
 var app = builder.Build();
 

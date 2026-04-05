@@ -1,36 +1,30 @@
-﻿using CarServiceTracker.Data;
-using CarServiceTracker.Models;
+﻿using CarServiceTracker.Models;
+using CarServiceTracker.Services.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace CarServiceTracker.Controllers
 {
     public class GarageController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IGarageService _garageService;
 
-        public GarageController(ApplicationDbContext context)
+        public GarageController(IGarageService garageService)
         {
-            _context = context;
+            _garageService = garageService;
         }
 
         // INDEX
         public async Task<IActionResult> Index()
         {
-            var garages = await _context.Garages
-                .Include(g => g.Cars)
-                .ToListAsync();
-
+            var garages = await _garageService.GetAllAsync();
             return View(garages);
         }
 
         // DETAILS
         public async Task<IActionResult> Details(int id)
         {
-            var garage = await _context.Garages
-                .Include(g => g.Cars)
-                .FirstOrDefaultAsync(g => g.Id == id);
+            var garage = await _garageService.GetByIdAsync(id);
 
             if (garage == null)
                 return NotFound();
@@ -52,9 +46,7 @@ namespace CarServiceTracker.Controllers
             if (!ModelState.IsValid)
                 return View(garage);
 
-            _context.Garages.Add(garage);
-            await _context.SaveChangesAsync();
-
+            await _garageService.CreateAsync(garage);
             return RedirectToAction(nameof(Index));
         }
 
@@ -62,7 +54,7 @@ namespace CarServiceTracker.Controllers
         [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Delete(int id)
         {
-            var garage = await _context.Garages.FindAsync(id);
+            var garage = await _garageService.GetByIdAsync(id);
 
             if (garage == null)
                 return NotFound();
@@ -76,14 +68,7 @@ namespace CarServiceTracker.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var garage = await _context.Garages.FindAsync(id);
-
-            if (garage != null)
-            {
-                _context.Garages.Remove(garage);
-                await _context.SaveChangesAsync();
-            }
-
+            await _garageService.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
         }
     }
