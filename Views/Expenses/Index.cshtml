@@ -1,0 +1,33 @@
+﻿@model IEnumerable<CarServiceTracker.Models.Expense>
+
+@{
+    ViewData["Title"] = "Expenses";
+}
+
+<h2>Expenses</h2>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New</a>
+</p>
+
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Amount</th>
+            <th>Date</th>
+            <th>Car</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Title</td>
+                <td class="fw-semibold text-success">€@item.Amount.ToString("F2")</td>
+                <td>@item.Date.ToString("yyyy-MM-dd")</td>
+                <td>@item.Car?.Brand @item.Car?.Model</td>
+            </tr>
+        }
+    </tbody>
+</table>
