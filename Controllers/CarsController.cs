@@ -1,49 +1,29 @@
-﻿using CarServiceTracker.Data;
-using CarServiceTracker.Models;
+﻿using CarServiceTracker.Models;
+using CarServiceTracker.Services.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace CarServiceTracker.Controllers
 {
     public class CarsController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ICarService _carService;
 
-        public CarsController(ApplicationDbContext context)
+        public CarsController(ICarService carService)
         {
-            _context = context;
+            _carService = carService;
         }
 
-        // INDEX + SEARCH
         public async Task<IActionResult> Index(string? searchTerm)
         {
-            var query = _context.Cars
-                .Include(c => c.ServiceRecords)
-                .AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(searchTerm))
-            {
-                query = query.Where(c =>
-                    c.Brand.Contains(searchTerm) ||
-                    c.Model.Contains(searchTerm));
-            }
-
-            var cars = await query
-                .OrderBy(c => c.Brand)
-                .ThenBy(c => c.Model)
-                .ToListAsync();
-
+            var cars = await _carService.GetAllAsync(searchTerm);
             ViewBag.SearchTerm = searchTerm;
-
             return View(cars);
         }
 
         public async Task<IActionResult> Details(int id)
         {
-            var car = await _context.Cars
-                .Include(c => c.ServiceRecords)
-                .FirstOrDefaultAsync(c => c.Id == id);
+            var car = await _carService.GetByIdAsync(id);
 
             if (car == null)
                 return NotFound();
@@ -63,15 +43,14 @@ namespace CarServiceTracker.Controllers
             if (!ModelState.IsValid)
                 return View(car);
 
-            _context.Cars.Add(car);
-            await _context.SaveChangesAsync();
-
+            await _carService.CreateAsync(car);
             return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult> Edit(int id)
         {
-            var car = await _context.Cars.FindAsync(id);
+            var car = await _carService.GetByIdAsync(id);
+
             if (car == null)
                 return NotFound();
 
@@ -88,17 +67,14 @@ namespace CarServiceTracker.Controllers
             if (!ModelState.IsValid)
                 return View(car);
 
-            _context.Update(car);
-            await _context.SaveChangesAsync();
-
+            await _carService.UpdateAsync(car);
             return RedirectToAction(nameof(Index));
         }
 
         [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Delete(int id)
         {
-            var car = await _context.Cars
-                .FirstOrDefaultAsync(c => c.Id == id);
+            var car = await _carService.GetByIdAsync(id);
 
             if (car == null)
                 return NotFound();
@@ -111,13 +87,7 @@ namespace CarServiceTracker.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var car = await _context.Cars.FindAsync(id);
-            if (car == null)
-                return NotFound();
-
-            _context.Cars.Remove(car);
-            await _context.SaveChangesAsync();
-
+            await _carService.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
         }
     }
