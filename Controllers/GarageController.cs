@@ -14,14 +14,12 @@ namespace CarServiceTracker.Controllers
             _garageService = garageService;
         }
 
-        // INDEX
         public async Task<IActionResult> Index()
         {
             var garages = await _garageService.GetAllAsync();
             return View(garages);
         }
 
-        // DETAILS
         public async Task<IActionResult> Details(int id)
         {
             var garage = await _garageService.GetByIdAsync(id);
@@ -32,13 +30,11 @@ namespace CarServiceTracker.Controllers
             return View(garage);
         }
 
-        // CREATE GET
         public IActionResult Create()
         {
             return View();
         }
 
-        // CREATE POST
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Garage garage)
@@ -50,7 +46,6 @@ namespace CarServiceTracker.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // DELETE GET
         [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -62,7 +57,6 @@ namespace CarServiceTracker.Controllers
             return View(garage);
         }
 
-        // DELETE POST
         [Authorize(Roles = "Administrator")]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]

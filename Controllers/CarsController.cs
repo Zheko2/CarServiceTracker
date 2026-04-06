@@ -1,17 +1,22 @@
-﻿using CarServiceTracker.Models;
+﻿using CarServiceTracker.Data;
+using CarServiceTracker.Models;
 using CarServiceTracker.Services.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 namespace CarServiceTracker.Controllers
 {
     public class CarsController : Controller
     {
         private readonly ICarService _carService;
+        private readonly ApplicationDbContext _context;
 
-        public CarsController(ICarService carService)
+        public CarsController(ICarService carService, ApplicationDbContext context)
         {
             _carService = carService;
+            _context = context;
         }
 
         public async Task<IActionResult> Index(string? searchTerm)
@@ -23,7 +28,10 @@ namespace CarServiceTracker.Controllers
 
         public async Task<IActionResult> Details(int id)
         {
-            var car = await _carService.GetByIdAsync(id);
+            var car = await _context.Cars
+                .Include(c => c.ServiceRecords)
+                .Include(c => c.Garage)
+                .FirstOrDefaultAsync(c => c.Id == id);
 
             if (car == null)
                 return NotFound();
@@ -31,8 +39,9 @@ namespace CarServiceTracker.Controllers
             return View(car);
         }
 
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            await LoadGaragesAsync();
             return View();
         }
 
@@ -41,7 +50,10 @@ namespace CarServiceTracker.Controllers
         public async Task<IActionResult> Create(Car car)
         {
             if (!ModelState.IsValid)
+            {
+                await LoadGaragesAsync(car.GarageId);
                 return View(car);
+            }
 
             await _carService.CreateAsync(car);
             return RedirectToAction(nameof(Index));
@@ -49,11 +61,12 @@ namespace CarServiceTracker.Controllers
 
         public async Task<IActionResult> Edit(int id)
         {
-            var car = await _carService.GetByIdAsync(id);
+            var car = await _context.Cars.FindAsync(id);
 
             if (car == null)
                 return NotFound();
 
+            await LoadGaragesAsync(car.GarageId);
             return View(car);
         }
 
@@ -65,7 +78,10 @@ namespace CarServiceTracker.Controllers
                 return BadRequest();
 
             if (!ModelState.IsValid)
+            {
+                await LoadGaragesAsync(car.GarageId);
                 return View(car);
+            }
 
             await _carService.UpdateAsync(car);
             return RedirectToAction(nameof(Index));
@@ -89,6 +105,20 @@ namespace CarServiceTracker.Controllers
         {
             await _carService.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
+        }
+
+        private async Task LoadGaragesAsync(int? selectedGarageId = null)
+        {
+            var garages = await _context.Garages
+                .OrderBy(g => g.Name)
+                .Select(g => new
+                {
+                    g.Id,
+                    Text = g.Name + " - " + g.Location
+                })
+                .ToListAsync();
+
+            ViewData["GarageId"] = new SelectList(garages, "Id", "Text", selectedGarageId);
         }
     }
 }

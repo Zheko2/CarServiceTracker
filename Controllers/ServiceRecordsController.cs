@@ -31,21 +31,20 @@ namespace CarServiceTracker.Controllers
                 ViewBag.FilterCar = await _serviceRecordService.GetFilterCarNameAsync(carId.Value) ?? "Selected car";
             }
 
+            var cars = await _context.Cars
+                .OrderBy(c => c.Brand)
+                .ThenBy(c => c.Model)
+                .Select(c => new
+                {
+                    c.Id,
+                    Text = c.Brand + " " + c.Model + " (" + c.Year + ")"
+                })
+                .ToListAsync();
+
+            ViewBag.Cars = cars;
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
             ViewBag.CurrentCarId = carId;
-
-            var cars = await _context.Cars
-             .OrderBy(c => c.Brand)
-             .ThenBy(c => c.Model)
-             .Select(c => new
-            {
-              c.Id,
-              Text = c.Brand + " " + c.Model + " (" + c.Year + ")"
-            })
-            .ToListAsync();
-
-            ViewBag.Cars = cars;
 
             return View(records);
         }
