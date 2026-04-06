@@ -1,12 +1,16 @@
 ﻿@model IEnumerable<CarServiceTracker.Models.Garage>
 
+@{
+    ViewData["Title"] = "Garages";
+}
+
 <h2>Garages</h2>
 
 <p>
     <a asp-action="Create" class="btn btn-primary">Create New</a>
 </p>
 
-<table class="table table-striped">
+<table class="table table-striped table-hover">
     <thead>
         <tr>
             <th>Name</th>
@@ -21,7 +25,11 @@
             <tr>
                 <td>@item.Name</td>
                 <td>@item.Location</td>
-                <td>@(item.Cars?.Count ?? 0)</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.Id">
+                        @(item.Cars?.Count ?? 0)
+                    </a>
+                </td>
                 <td>
                     <a asp-action="Details" asp-route-id="@item.Id">Details</a>
                     @if (User.IsInRole("Administrator"))
