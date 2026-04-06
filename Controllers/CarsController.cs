@@ -2,36 +2,60 @@
 using CarServiceTracker.Models;
 using CarServiceTracker.Services.Contracts;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarServiceTracker.Controllers
 {
+    [Authorize]
     public class CarsController : Controller
     {
         private readonly ICarService _carService;
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public CarsController(ICarService carService, ApplicationDbContext context)
+        public CarsController(
+            ICarService carService,
+            ApplicationDbContext context,
+            UserManager<IdentityUser> userManager)
         {
             _carService = carService;
             _context = context;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> Index(string? searchTerm)
         {
-            var cars = await _carService.GetAllAsync(searchTerm);
+            var userId = _userManager.GetUserId(User)!;
+            var isAdmin = User.IsInRole("Administrator");
+
+            var cars = await _context.Cars
+                .Include(c => c.ServiceRecords)
+                .Include(c => c.Garage)
+                .Where(c => isAdmin || c.OwnerId == userId)
+                .AsQueryable()
+                .Where(c => string.IsNullOrWhiteSpace(searchTerm) ||
+                            c.Brand.Contains(searchTerm) ||
+                            c.Model.Contains(searchTerm))
+                .OrderBy(c => c.Brand)
+                .ThenBy(c => c.Model)
+                .ToListAsync();
+
             ViewBag.SearchTerm = searchTerm;
             return View(cars);
         }
 
         public async Task<IActionResult> Details(int id)
         {
+            var userId = _userManager.GetUserId(User)!;
+            var isAdmin = User.IsInRole("Administrator");
+
             var car = await _context.Cars
                 .Include(c => c.ServiceRecords)
                 .Include(c => c.Garage)
-                .FirstOrDefaultAsync(c => c.Id == id);
+                .FirstOrDefaultAsync(c => c.Id == id && (isAdmin || c.OwnerId == userId));
 
             if (car == null)
                 return NotFound();
@@ -57,13 +81,21 @@ namespace CarServiceTracker.Controllers
                 return View(car);
             }
 
-            await _carService.CreateAsync(car);
+            car.OwnerId = _userManager.GetUserId(User)!;
+
+            _context.Cars.Add(car);
+            await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult> Edit(int id)
         {
-            var car = await _context.Cars.FindAsync(id);
+            var userId = _userManager.GetUserId(User)!;
+            var isAdmin = User.IsInRole("Administrator");
+
+            var car = await _context.Cars
+                .FirstOrDefaultAsync(c => c.Id == id && (isAdmin || c.OwnerId == userId));
 
             if (car == null)
                 return NotFound();
@@ -77,8 +109,18 @@ namespace CarServiceTracker.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Car car)
         {
+            var userId = _userManager.GetUserId(User)!;
+            var isAdmin = User.IsInRole("Administrator");
+
             if (id != car.Id)
                 return BadRequest();
+
+            var existingCar = await _context.Cars
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == id && (isAdmin || c.OwnerId == userId));
+
+            if (existingCar == null)
+                return NotFound();
 
             if (!ModelState.IsValid)
             {
@@ -87,14 +129,20 @@ namespace CarServiceTracker.Controllers
                 return View(car);
             }
 
-            await _carService.UpdateAsync(car);
+            car.OwnerId = existingCar.OwnerId;
+
+            _context.Update(car);
+            await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
 
         [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Delete(int id)
         {
-            var car = await _carService.GetByIdAsync(id);
+            var car = await _context.Cars
+                .Include(c => c.Garage)
+                .FirstOrDefaultAsync(c => c.Id == id);
 
             if (car == null)
                 return NotFound();
@@ -107,13 +155,23 @@ namespace CarServiceTracker.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            await _carService.DeleteAsync(id);
+            var car = await _context.Cars.FindAsync(id);
+            if (car == null)
+                return NotFound();
+
+            _context.Cars.Remove(car);
+            await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
 
         private async Task LoadGaragesAsync(int? selectedGarageId = null)
         {
+            var userId = _userManager.GetUserId(User)!;
+            var isAdmin = User.IsInRole("Administrator");
+
             var garages = await _context.Garages
+                .Where(g => isAdmin || g.OwnerId == userId)
                 .OrderBy(g => g.Name)
                 .Select(g => new
                 {
