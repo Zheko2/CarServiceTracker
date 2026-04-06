@@ -6,9 +6,12 @@
 
 <h2>Garages</h2>
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">Create New</a>
-</p>
+@if (User.IsInRole("Administrator"))
+{
+    <p>
+        <a asp-action="Create" class="btn btn-primary">Create New</a>
+    </p>
+}
 
 <table class="table table-striped table-hover">
     <thead>

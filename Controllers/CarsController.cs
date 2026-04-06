@@ -74,14 +74,16 @@ namespace CarServiceTracker.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Car car)
         {
+            car.OwnerId = _userManager.GetUserId(User)!;
+
+            ModelState.Remove(nameof(Car.OwnerId));
+
             if (!ModelState.IsValid)
             {
                 await LoadGaragesAsync(car.GarageId);
                 LoadStatuses(car.Status);
                 return View(car);
             }
-
-            car.OwnerId = _userManager.GetUserId(User)!;
 
             _context.Cars.Add(car);
             await _context.SaveChangesAsync();
@@ -122,14 +124,15 @@ namespace CarServiceTracker.Controllers
             if (existingCar == null)
                 return NotFound();
 
+            car.OwnerId = existingCar.OwnerId;
+            ModelState.Remove(nameof(Car.OwnerId));
+
             if (!ModelState.IsValid)
             {
                 await LoadGaragesAsync(car.GarageId);
                 LoadStatuses(car.Status);
                 return View(car);
             }
-
-            car.OwnerId = existingCar.OwnerId;
 
             _context.Update(car);
             await _context.SaveChangesAsync();
@@ -167,11 +170,7 @@ namespace CarServiceTracker.Controllers
 
         private async Task LoadGaragesAsync(int? selectedGarageId = null)
         {
-            var userId = _userManager.GetUserId(User)!;
-            var isAdmin = User.IsInRole("Administrator");
-
             var garages = await _context.Garages
-                .Where(g => isAdmin || g.OwnerId == userId)
                 .OrderBy(g => g.Name)
                 .Select(g => new
                 {

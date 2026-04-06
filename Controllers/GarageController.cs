@@ -27,12 +27,9 @@ namespace CarServiceTracker.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var userId = _userManager.GetUserId(User)!;
-            var isAdmin = User.IsInRole("Administrator");
-
             var garages = await _context.Garages
                 .Include(g => g.Cars)
-                .Where(g => isAdmin || g.OwnerId == userId)
+                .OrderBy(g => g.Name)
                 .ToListAsync();
 
             return View(garages);
@@ -40,12 +37,9 @@ namespace CarServiceTracker.Controllers
 
         public async Task<IActionResult> Details(int id)
         {
-            var userId = _userManager.GetUserId(User)!;
-            var isAdmin = User.IsInRole("Administrator");
-
             var garage = await _context.Garages
                 .Include(g => g.Cars)
-                .FirstOrDefaultAsync(g => g.Id == id && (isAdmin || g.OwnerId == userId));
+                .FirstOrDefaultAsync(g => g.Id == id);
 
             if (garage == null)
                 return NotFound();
@@ -53,11 +47,13 @@ namespace CarServiceTracker.Controllers
             return View(garage);
         }
 
+        [Authorize(Roles = "Administrator")]
         public IActionResult Create()
         {
             return View();
         }
 
+        [Authorize(Roles = "Administrator")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Garage garage)
