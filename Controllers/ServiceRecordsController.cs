@@ -1,37 +1,64 @@
 ﻿using CarServiceTracker.Data;
 using CarServiceTracker.Models;
-using CarServiceTracker.Services.Contracts;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarServiceTracker.Controllers
 {
+    [Authorize]
     public class ServiceRecordsController : Controller
     {
-        private readonly IServiceRecordService _serviceRecordService;
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public ServiceRecordsController(IServiceRecordService serviceRecordService, ApplicationDbContext context)
+        public ServiceRecordsController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
         {
-            _serviceRecordService = serviceRecordService;
             _context = context;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> Index(int? carId, int page = 1)
         {
+            var userId = _userManager.GetUserId(User)!;
+            var isAdmin = User.IsInRole("Administrator");
             int pageSize = 5;
 
-            var records = await _serviceRecordService.GetAllAsync(carId, page, pageSize);
-            int totalRecords = await _serviceRecordService.GetCountAsync(carId);
+            var query = _context.ServiceRecords
+                .Include(r => r.Car)
+                .Include(r => r.ServiceType)
+                .Where(r => isAdmin || r.Car!.OwnerId == userId)
+                .AsQueryable();
 
             if (carId.HasValue)
             {
-                ViewBag.FilterCar = await _serviceRecordService.GetFilterCarNameAsync(carId.Value) ?? "Selected car";
+                query = query.Where(r => r.CarId == carId.Value);
+
+                var car = await _context.Cars
+                    .Where(c => c.Id == carId.Value && (isAdmin || c.OwnerId == userId))
+                    .Select(c => new { c.Brand, c.Model, c.Year })
+                    .FirstOrDefaultAsync();
+
+                if (car == null)
+                {
+                    return NotFound();
+                }
+
+                ViewBag.FilterCar = $"{car.Brand} {car.Model} ({car.Year})";
             }
 
+            int totalRecords = await query.CountAsync();
+
+            var records = await query
+                .OrderByDescending(r => r.Date)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
             var cars = await _context.Cars
+                .Where(c => isAdmin || c.OwnerId == userId)
                 .OrderBy(c => c.Brand)
                 .ThenBy(c => c.Model)
                 .Select(c => new
@@ -53,7 +80,13 @@ namespace CarServiceTracker.Controllers
         {
             if (id == null) return NotFound();
 
-            var record = await _serviceRecordService.GetByIdAsync(id.Value);
+            var userId = _userManager.GetUserId(User)!;
+            var isAdmin = User.IsInRole("Administrator");
+
+            var record = await _context.ServiceRecords
+                .Include(r => r.Car)
+                .Include(r => r.ServiceType)
+                .FirstOrDefaultAsync(r => r.Id == id && (isAdmin || r.Car!.OwnerId == userId));
 
             if (record == null) return NotFound();
 
@@ -70,13 +103,26 @@ namespace CarServiceTracker.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ServiceRecord record)
         {
+            var userId = _userManager.GetUserId(User)!;
+            var isAdmin = User.IsInRole("Administrator");
+
+            var allowedCar = await _context.Cars
+                .AnyAsync(c => c.Id == record.CarId && (isAdmin || c.OwnerId == userId));
+
+            if (!allowedCar)
+            {
+                ModelState.AddModelError(nameof(record.CarId), "Invalid car selection.");
+            }
+
             if (!ModelState.IsValid)
             {
                 await LoadDropdownsAsync(record.CarId, record.ServiceTypeId);
                 return View(record);
             }
 
-            await _serviceRecordService.CreateAsync(record);
+            _context.ServiceRecords.Add(record);
+            await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -84,7 +130,12 @@ namespace CarServiceTracker.Controllers
         {
             if (id == null) return NotFound();
 
-            var record = await _serviceRecordService.GetByIdAsync(id.Value);
+            var userId = _userManager.GetUserId(User)!;
+            var isAdmin = User.IsInRole("Administrator");
+
+            var record = await _context.ServiceRecords
+                .FirstOrDefaultAsync(r => r.Id == id && (isAdmin || r.Car!.OwnerId == userId));
+
             if (record == null) return NotFound();
 
             await LoadDropdownsAsync(record.CarId, record.ServiceTypeId);
@@ -95,7 +146,27 @@ namespace CarServiceTracker.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, ServiceRecord record)
         {
+            var userId = _userManager.GetUserId(User)!;
+            var isAdmin = User.IsInRole("Administrator");
+
             if (id != record.Id) return NotFound();
+
+            var existingRecord = await _context.ServiceRecords
+                .AsNoTracking()
+                .FirstOrDefaultAsync(r => r.Id == id && (isAdmin || r.Car!.OwnerId == userId));
+
+            if (existingRecord == null)
+            {
+                return NotFound();
+            }
+
+            var allowedCar = await _context.Cars
+                .AnyAsync(c => c.Id == record.CarId && (isAdmin || c.OwnerId == userId));
+
+            if (!allowedCar)
+            {
+                ModelState.AddModelError(nameof(record.CarId), "Invalid car selection.");
+            }
 
             if (!ModelState.IsValid)
             {
@@ -103,7 +174,9 @@ namespace CarServiceTracker.Controllers
                 return View(record);
             }
 
-            await _serviceRecordService.UpdateAsync(record);
+            _context.Update(record);
+            await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -112,7 +185,10 @@ namespace CarServiceTracker.Controllers
         {
             if (id == null) return NotFound();
 
-            var record = await _serviceRecordService.GetByIdAsync(id.Value);
+            var record = await _context.ServiceRecords
+                .Include(r => r.Car)
+                .Include(r => r.ServiceType)
+                .FirstOrDefaultAsync(r => r.Id == id);
 
             if (record == null) return NotFound();
 
@@ -124,13 +200,24 @@ namespace CarServiceTracker.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            await _serviceRecordService.DeleteAsync(id);
+            var record = await _context.ServiceRecords.FindAsync(id);
+
+            if (record != null)
+            {
+                _context.ServiceRecords.Remove(record);
+                await _context.SaveChangesAsync();
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
         private async Task LoadDropdownsAsync(int? selectedCarId = null, int? selectedServiceTypeId = null)
         {
+            var userId = _userManager.GetUserId(User)!;
+            var isAdmin = User.IsInRole("Administrator");
+
             var cars = await _context.Cars
+                .Where(c => isAdmin || c.OwnerId == userId)
                 .OrderBy(c => c.Brand)
                 .ThenBy(c => c.Model)
                 .Select(c => new
