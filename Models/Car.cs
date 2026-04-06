@@ -23,6 +23,9 @@ namespace CarServiceTracker.Models
         public int? GarageId { get; set; }
         public Garage? Garage { get; set; }
 
+        [Required]
+        public string OwnerId { get; set; } = null!;
+
         public ICollection<ServiceRecord> ServiceRecords { get; set; } = new List<ServiceRecord>();
         public ICollection<Expense> Expenses { get; set; } = new List<Expense>();
     }
