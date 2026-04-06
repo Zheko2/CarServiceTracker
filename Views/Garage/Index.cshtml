@@ -16,6 +16,10 @@
             <th>Name</th>
             <th>Location</th>
             <th>Cars</th>
+            @if (User.IsInRole("Administrator"))
+            {
+                <th>Owner</th>
+            }
             <th></th>
         </tr>
     </thead>
@@ -30,6 +34,12 @@
                         @(item.Cars?.Count ?? 0)
                     </a>
                 </td>
+
+                @if (User.IsInRole("Administrator"))
+                {
+                    <td>@item.OwnerId</td>
+                }
+
                 <td>
                     <a asp-action="Details" asp-route-id="@item.Id">Details</a>
                     @if (User.IsInRole("Administrator"))

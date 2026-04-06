@@ -34,6 +34,10 @@
             <th>Garage</th>
             <th>Service Records</th>
             <th>Total Spent (€)</th>
+            @if (User.IsInRole("Administrator"))
+            {
+                <th>Owner</th>
+            }
             <th></th>
         </tr>
     </thead>
@@ -60,6 +64,11 @@
                 <td class="fw-semibold text-success">
                     €@totalSpent.ToString("F2")
                 </td>
+
+                @if (User.IsInRole("Administrator"))
+                {
+                    <td>@item.OwnerId</td>
+                }
 
                 <td>
                     <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
