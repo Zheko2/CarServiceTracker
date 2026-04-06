@@ -1,10 +1,34 @@
 ﻿@model IEnumerable<CarServiceTracker.Models.ServiceRecord>
 
+
+
 @{
     ViewData["Title"] = "Service Records";
 }
 
 <h1>Service Records</h1>
+
+<form method="get" asp-action="Index" class="row g-2 mb-3">
+
+    <div class="col-auto">
+        <select name="carId" class="form-select">
+            <option value="">All Cars</option>
+
+            @foreach (var car in (IEnumerable<dynamic>)ViewBag.Cars ?? new List<dynamic>())
+            {
+                <option value="@car.Id"
+                        selected="@(ViewBag.CurrentCarId != null && ViewBag.CurrentCarId == car.Id)">
+                    @car.Text
+                </option>
+            }
+        </select>
+    </div>
+
+    <div class="col-auto">
+        <button type="submit" class="btn btn-outline-primary">Filter</button>
+    </div>
+
+</form>
 
 @if (ViewBag.FilterCar != null)
 {

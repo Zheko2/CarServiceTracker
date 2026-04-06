@@ -1,5 +1,6 @@
 ﻿using CarServiceTracker.Data;
 using CarServiceTracker.Models;
+using CarServiceTracker.Services.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -9,48 +10,42 @@ namespace CarServiceTracker.Controllers
 {
     public class ServiceRecordsController : Controller
     {
+        private readonly IServiceRecordService _serviceRecordService;
         private readonly ApplicationDbContext _context;
 
-        public ServiceRecordsController(ApplicationDbContext context)
+        public ServiceRecordsController(IServiceRecordService serviceRecordService, ApplicationDbContext context)
         {
+            _serviceRecordService = serviceRecordService;
             _context = context;
         }
 
-        // INDEX (with optional filter by carId)
         public async Task<IActionResult> Index(int? carId, int page = 1)
         {
             int pageSize = 5;
 
-            var query = _context.ServiceRecords
-                .Include(r => r.Car)
-                .Include(r => r.ServiceType)
-                .AsQueryable();
+            var records = await _serviceRecordService.GetAllAsync(carId, page, pageSize);
+            int totalRecords = await _serviceRecordService.GetCountAsync(carId);
 
             if (carId.HasValue)
             {
-                query = query.Where(r => r.CarId == carId.Value);
-
-                var car = await _context.Cars
-                    .Where(c => c.Id == carId.Value)
-                    .Select(c => new { c.Brand, c.Model, c.Year })
-                    .FirstOrDefaultAsync();
-
-                ViewBag.FilterCar = car != null
-                    ? $"{car.Brand} {car.Model} ({car.Year})"
-                    : "Selected car";
+                ViewBag.FilterCar = await _serviceRecordService.GetFilterCarNameAsync(carId.Value) ?? "Selected car";
             }
-
-            int totalRecords = await query.CountAsync();
-
-            var records = await query
-                .OrderByDescending(r => r.Date)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
 
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
             ViewBag.CurrentCarId = carId;
+
+            var cars = await _context.Cars
+             .OrderBy(c => c.Brand)
+             .ThenBy(c => c.Model)
+             .Select(c => new
+            {
+              c.Id,
+              Text = c.Brand + " " + c.Model + " (" + c.Year + ")"
+            })
+            .ToListAsync();
+
+            ViewBag.Cars = cars;
 
             return View(records);
         }
@@ -59,10 +54,7 @@ namespace CarServiceTracker.Controllers
         {
             if (id == null) return NotFound();
 
-            var record = await _context.ServiceRecords
-                .Include(r => r.Car)
-                .Include(r => r.ServiceType)
-                .FirstOrDefaultAsync(r => r.Id == id);
+            var record = await _serviceRecordService.GetByIdAsync(id.Value);
 
             if (record == null) return NotFound();
 
@@ -85,9 +77,7 @@ namespace CarServiceTracker.Controllers
                 return View(record);
             }
 
-            _context.ServiceRecords.Add(record);
-            await _context.SaveChangesAsync();
-
+            await _serviceRecordService.CreateAsync(record);
             return RedirectToAction(nameof(Index));
         }
 
@@ -95,7 +85,7 @@ namespace CarServiceTracker.Controllers
         {
             if (id == null) return NotFound();
 
-            var record = await _context.ServiceRecords.FindAsync(id);
+            var record = await _serviceRecordService.GetByIdAsync(id.Value);
             if (record == null) return NotFound();
 
             await LoadDropdownsAsync(record.CarId, record.ServiceTypeId);
@@ -114,9 +104,7 @@ namespace CarServiceTracker.Controllers
                 return View(record);
             }
 
-            _context.Update(record);
-            await _context.SaveChangesAsync();
-
+            await _serviceRecordService.UpdateAsync(record);
             return RedirectToAction(nameof(Index));
         }
 
@@ -125,10 +113,7 @@ namespace CarServiceTracker.Controllers
         {
             if (id == null) return NotFound();
 
-            var record = await _context.ServiceRecords
-                .Include(r => r.Car)
-                .Include(r => r.ServiceType)
-                .FirstOrDefaultAsync(r => r.Id == id);
+            var record = await _serviceRecordService.GetByIdAsync(id.Value);
 
             if (record == null) return NotFound();
 
@@ -140,14 +125,7 @@ namespace CarServiceTracker.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var record = await _context.ServiceRecords.FindAsync(id);
-
-            if (record != null)
-            {
-                _context.ServiceRecords.Remove(record);
-                await _context.SaveChangesAsync();
-            }
-
+            await _serviceRecordService.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
         }
 

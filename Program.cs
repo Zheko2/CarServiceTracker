@@ -33,6 +33,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddScoped<IGarageService, GarageService>();
 builder.Services.AddScoped<IExpenseService, ExpenseService>();
 builder.Services.AddScoped<ICarService, CarService>();
+builder.Services.AddScoped<IServiceRecordService, ServiceRecordService>();
 
 var app = builder.Build();
 
