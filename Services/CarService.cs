@@ -18,6 +18,7 @@ namespace CarServiceTracker.Services
         {
             var query = _context.Cars
                 .Include(c => c.ServiceRecords)
+                .Include(c => c.Garage)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -37,6 +38,7 @@ namespace CarServiceTracker.Services
         {
             return await _context.Cars
                 .Include(c => c.ServiceRecords)
+                .Include(c => c.Garage)
                 .FirstOrDefaultAsync(c => c.Id == id);
         }
 

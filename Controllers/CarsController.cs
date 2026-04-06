@@ -42,7 +42,8 @@ namespace CarServiceTracker.Controllers
         public async Task<IActionResult> Create()
         {
             await LoadGaragesAsync();
-            return View();
+            LoadStatuses();
+            return View(new Car { Status = "Repairing" });
         }
 
         [HttpPost]
@@ -52,6 +53,7 @@ namespace CarServiceTracker.Controllers
             if (!ModelState.IsValid)
             {
                 await LoadGaragesAsync(car.GarageId);
+                LoadStatuses(car.Status);
                 return View(car);
             }
 
@@ -67,6 +69,7 @@ namespace CarServiceTracker.Controllers
                 return NotFound();
 
             await LoadGaragesAsync(car.GarageId);
+            LoadStatuses(car.Status);
             return View(car);
         }
 
@@ -80,6 +83,7 @@ namespace CarServiceTracker.Controllers
             if (!ModelState.IsValid)
             {
                 await LoadGaragesAsync(car.GarageId);
+                LoadStatuses(car.Status);
                 return View(car);
             }
 
@@ -119,6 +123,19 @@ namespace CarServiceTracker.Controllers
                 .ToListAsync();
 
             ViewData["GarageId"] = new SelectList(garages, "Id", "Text", selectedGarageId);
+        }
+
+        private void LoadStatuses(string? selectedStatus = null)
+        {
+            var statuses = new List<string>
+            {
+                "Repairing",
+                "Changing",
+                "Repaired",
+                "Changed"
+            };
+
+            ViewData["Status"] = new SelectList(statuses, selectedStatus);
         }
     }
 }

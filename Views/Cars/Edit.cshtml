@@ -30,6 +30,15 @@
     </div>
 
     <div class="mb-3">
+        <label asp-for="Status" class="form-label"></label>
+        <select asp-for="Status"
+                class="form-select"
+                asp-items="@(ViewData["Status"] as SelectList)">
+        </select>
+        <span asp-validation-for="Status" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
         <label asp-for="GarageId" class="form-label">Garage</label>
         <select asp-for="GarageId"
                 class="form-select"

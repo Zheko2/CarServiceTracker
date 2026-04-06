@@ -30,6 +30,8 @@
             <th>Brand</th>
             <th>Model</th>
             <th>Year</th>
+            <th>Status</th>
+            <th>Garage</th>
             <th>Service Records</th>
             <th>Total Spent (€)</th>
             <th></th>
@@ -44,6 +46,8 @@
                 <td>@item.Brand</td>
                 <td>@item.Model</td>
                 <td>@item.Year</td>
+                <td>@item.Status</td>
+                <td>@(item.Garage != null ? item.Garage.Name : "No garage")</td>
 
                 <td>
                     <a asp-controller="ServiceRecords"
