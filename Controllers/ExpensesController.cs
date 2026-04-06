@@ -1,6 +1,5 @@
 ﻿using CarServiceTracker.Data;
 using CarServiceTracker.Models;
-using CarServiceTracker.Services.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -9,24 +8,27 @@ namespace CarServiceTracker.Controllers
 {
     public class ExpensesController : Controller
     {
-        private readonly IExpenseService _expenseService;
         private readonly ApplicationDbContext _context;
 
-        public ExpensesController(IExpenseService expenseService, ApplicationDbContext context)
+        public ExpensesController(ApplicationDbContext context)
         {
-            _expenseService = expenseService;
             _context = context;
         }
 
         public async Task<IActionResult> Index()
         {
-            var expenses = await _expenseService.GetAllAsync();
+            var expenses = await _context.Expenses
+                .Include(e => e.Car)
+                .OrderByDescending(e => e.Date)
+                .ToListAsync();
+
             return View(expenses);
         }
 
         public async Task<IActionResult> Create()
         {
             await LoadCarsAsync();
+            LoadCategories();
             return View(new Expense { Date = DateTime.Today });
         }
 
@@ -37,10 +39,13 @@ namespace CarServiceTracker.Controllers
             if (!ModelState.IsValid)
             {
                 await LoadCarsAsync(expense.CarId);
+                LoadCategories(expense.Category);
                 return View(expense);
             }
 
-            await _expenseService.CreateAsync(expense);
+            _context.Expenses.Add(expense);
+            await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -57,6 +62,23 @@ namespace CarServiceTracker.Controllers
                 .ToListAsync();
 
             ViewData["CarId"] = new SelectList(cars, "Id", "Text", selectedCarId);
+        }
+
+        private void LoadCategories(string? selectedCategory = null)
+        {
+            var categories = new List<string>
+            {
+                "Fuel",
+                "Insurance",
+                "Tax",
+                "Car Wash",
+                "Parking",
+                "Vignette",
+                "Accessories",
+                "Other"
+            };
+
+            ViewData["Category"] = new SelectList(categories, selectedCategory);
         }
     }
 }

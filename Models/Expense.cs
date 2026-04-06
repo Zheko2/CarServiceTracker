@@ -12,6 +12,10 @@ namespace CarServiceTracker.Models
         public string Title { get; set; } = null!;
 
         [Required]
+        [StringLength(50)]
+        public string Category { get; set; } = null!;
+
+        [Required]
         [Range(typeof(decimal), "0", "1000000")]
         [Precision(18, 2)]
         public decimal Amount { get; set; }
