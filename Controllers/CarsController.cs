@@ -55,6 +55,7 @@ namespace CarServiceTracker.Controllers
             var car = await _context.Cars
                 .Include(c => c.ServiceRecords)
                 .Include(c => c.Garage)
+                .Include(c => c.Owner)
                 .FirstOrDefaultAsync(c => c.Id == id && (isAdmin || c.OwnerId == userId));
 
             if (car == null)

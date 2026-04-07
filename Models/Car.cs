@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
 
 namespace CarServiceTracker.Models
 {
     public class Car
     {
+        
         public int Id { get; set; }
 
         [Required]
@@ -26,6 +28,7 @@ namespace CarServiceTracker.Models
         [Required]
         public string OwnerId { get; set; } = null!;
 
+        public IdentityUser? Owner { get; set; }
         public ICollection<ServiceRecord> ServiceRecords { get; set; } = new List<ServiceRecord>();
         public ICollection<Expense> Expenses { get; set; } = new List<Expense>();
     }
