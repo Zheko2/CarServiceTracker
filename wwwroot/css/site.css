@@ -40,3 +40,53 @@ body {
         background-color: #4cc9f0;
         color: white;
     }
+
+body {
+    background-color: #f8f9fb;
+}
+
+.navbar {
+    background: linear-gradient(90deg, #0d1b2a, #1b263b) !important;
+}
+
+    .navbar .navbar-brand,
+    .navbar .nav-link,
+    .navbar .btn-link {
+        color: #ffffff !important;
+    }
+
+        .navbar .nav-link:hover,
+        .navbar .navbar-brand:hover {
+            color: #cfe8ff !important;
+        }
+
+.btn-primary {
+    border-radius: 10px;
+}
+
+.btn-secondary {
+    border-radius: 10px;
+}
+
+.btn-danger {
+    border-radius: 10px;
+}
+
+.card,
+.table {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.table {
+    background-color: white;
+}
+
+h1, h2, h3 {
+    font-weight: 700;
+    color: #1b263b;
+}
+
+.alert {
+    border-radius: 10px;
+}
